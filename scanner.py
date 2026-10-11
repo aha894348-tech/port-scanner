@@ -1,20 +1,38 @@
-# scanner.py
 import socket
+import sys
+
+def resolve_host(host):
+    #Turn a hostname into an IP. Raises if it fails.
+    try:
+        return socket.gethostbyname(host)
+    except socket.gaierror:
+        print(f"Error: could not resolve '{host}'")
+        sys.exit(1)
 
 def scan_port(host, port):
-    #Try to connect to a single port. Return True if open.
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(1.0)  # to prevent connect for searching for too long
-
+    sock.settimeout(1.0)
     try:
-        result = sock.connect_ex((host, port))
-        # connect_ex returns 0 on success, error code otherwise
-        return result == 0
+        return sock.connect_ex((host, port)) == 0
     finally:
         sock.close()
 
+def scan_range(host, start, end):
+    open_ports = []
+    for port in range(start, end + 1):
+        if scan_port(host, port):
+            open_ports.append(port)
+            print(f"  [OPEN] {port}")
+    return open_ports
+
 if __name__ == "__main__":
-    host = "127.0.0.1"
-    for port in [22, 80, 443, 9999]:
-        status = "OPEN" if scan_port(host, port) else "closed"
-        print(f"port {port}: {status}")
+    if len(sys.argv) != 4:
+        print("Usage: python scanner.py <host> <start_port> <end_port>")
+        sys.exit(1)
+
+    host = resolve_host(sys.argv[1])
+    start, end = int(sys.argv[2]), int(sys.argv[3])
+
+    print(f"Scanning {host} ports {start}-{end}...")
+    results = scan_range(host, start, end)
+    print(f"\nDone. {len(results)} open ports.")
