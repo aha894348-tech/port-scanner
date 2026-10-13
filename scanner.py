@@ -1,5 +1,6 @@
 import socket
 import sys
+import argparse
 
 def resolve_host(host):
     #Turn a hostname into an IP. Raises if it fails.
@@ -26,13 +27,15 @@ def scan_range(host, start, end):
     return open_ports
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python scanner.py <host> <start_port> <end_port>")
-        sys.exit(1)
+   parser = argparse.ArgumentParser(description="TCP port scanner")
+   parser.add_argument("host", help="hostname or IP to scan")
+   parser.add_argument("start", type=int, help="first port")
+   parser.add_argument("end", type=int, help="last port")
+   args = parser.parse_args()
 
-    host = resolve_host(sys.argv[1])
-    start, end = int(sys.argv[2]), int(sys.argv[3])
+   host = resolve_host(args.host)
+   start, end = args.start, args.end    
 
-    print(f"Scanning {host} ports {start}-{end}...")
-    results = scan_range(host, start, end)
-    print(f"\nDone. {len(results)} open ports.")
+   print(f"Scanning {host} ports {start}-{end}...")
+   results = scan_range(host, start, end)
+   print(f"\nDone. {len(results)} open ports.")
